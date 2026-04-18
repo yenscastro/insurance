@@ -707,71 +707,98 @@
     /* ── Print / PDF styles ─────────────────────────────────────────── */
     @page {
       size: letter landscape;
-      margin: 0.5in 0.6in;
+      margin: 0.4in 0.5in;
     }
     @media print {
       body {
         display: block;
         background: var(--bg);
         color: var(--text);
-        font-size: 12px;
-        line-height: 1.6;
+        font-size: 11.5px;
+        line-height: 1.55;
       }
       #sidebar { display: none !important; }
       #main {
         margin-left: 0 !important;
-        padding: 20px 0 !important;
+        padding: 10px 0 !important;
       }
       .content-wrap {
-        max-width: 100% !important;
+        max-width: 900px !important;
+        margin: 0 auto !important;
         padding: 0 !important;
       }
       #confid-banner {
         position: static;
-        margin-bottom: 16px;
-        padding: 10px 0;
+        margin-bottom: 10px;
+        padding: 6px 0;
+        font-size: 9px;
       }
-      /* Force page break BEFORE every section for clear separation */
+
+      /* Sections flow naturally — NO blanket page breaks */
       section {
+        padding-top: 20px;
+        margin-top: 20px;
+        border-top: 1px solid #333;
+      }
+      section:first-of-type { border-top: none; margin-top: 0; }
+
+      /* Only force page breaks before heavy sections */
+      #diagram, #datamodels, #schedule, #compliance, #rag, #filetree {
         page-break-before: always;
-        padding-top: 32px;
-        margin-top: 0;
-        border-top: none;
       }
-      /* First section doesn't need a page break (it follows the hero) */
-      section:first-of-type {
-        page-break-before: avoid;
-      }
-      /* Never break inside these elements */
-      .card, .code-block, .table-wrap, table, .card-grid {
+
+      /* Never break inside these */
+      .card, .code-block, .table-wrap, table, .card-grid, .arch-diagram, .arch-box {
         page-break-inside: avoid;
       }
-      /* Keep headers with their content */
-      h2, h3, .section-header {
-        page-break-after: avoid;
-      }
-      .card-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .card-grid.three {
-        grid-template-columns: 1fr 1fr 1fr;
-      }
-      pre {
-        font-size: 10.5px;
-        line-height: 1.5;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        padding: 16px;
-      }
-      h2 { font-size: 18px; margin-bottom: 16px; }
-      h3 { font-size: 12px; margin-top: 20px; margin-bottom: 10px; }
-      .hero-title { font-size: 28px; }
-      .hero-subtitle { font-size: 13px; }
-      .section-header { margin-bottom: 20px; }
-      p { margin-bottom: 12px; font-size: 12px; line-height: 1.65; }
-      .card { padding: 16px 20px; margin-bottom: 10px; }
-      tbody td, thead th { padding: 8px 14px; font-size: 11px; }
+      h2, h3, .section-header { page-break-after: avoid; }
+
+      /* Tighter cards and grids */
+      .card-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .card-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+      .card { padding: 10px 14px; margin-bottom: 6px; }
+      .card-title { font-size: 11px; }
+      .card-body { font-size: 10.5px; }
+
+      /* Compact typography */
+      h2 { font-size: 16px; margin-bottom: 10px; }
+      h3 { font-size: 11px; margin-top: 14px; margin-bottom: 6px; }
+      .hero-title { font-size: 22px; }
+      .hero-subtitle { font-size: 11.5px; max-width: 700px; }
+      .section-header { margin-bottom: 12px; }
+      p { margin-bottom: 8px; font-size: 11.5px; line-height: 1.55; }
+
+      /* Compact tables */
+      tbody td, thead th { padding: 5px 10px; font-size: 10.5px; }
+      thead th { font-size: 9px; }
+
+      /* Compact code */
+      pre { font-size: 9.5px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; padding: 10px 14px; }
+      .code-header { padding: 4px 14px; }
+      .code-lang { font-size: 8px; }
+      .code-filename { font-size: 9px; }
+
+      /* Architecture diagram — compact for one page */
+      .arch-diagram { padding: 20px 16px; }
+      .arch-box { padding: 10px 16px; min-width: 160px !important; }
+      .arch-box.wide { min-width: 500px !important; max-width: 700px !important; }
+      .arch-box-title { font-size: 8px; margin-bottom: 4px; }
+      .arch-box-name { font-size: 12px; }
+      .arch-box-sub { font-size: 10px; }
+      .arch-inner-box { padding: 4px 10px; font-size: 10px; }
+      .arch-inner-row { gap: 6px; margin-top: 6px; }
+      .arch-arrow { padding: 4px 0; font-size: 14px; }
+      .arch-arrow-label { font-size: 8px; }
+      .arch-arrow-wide { padding: 4px 0; font-size: 14px; gap: 40px; }
+      .arch-output { font-size: 9px; padding: 1px 6px; }
+      .arch-db-list { gap: 2px 16px; margin-top: 4px; }
+      .arch-db-list span { font-size: 9.5px; }
+
+      /* Hero meta */
+      .hero-meta { gap: 16px; margin-top: 14px; }
+      .meta-label { font-size: 8px; }
+      .meta-value { font-size: 11px; }
+      #hero { padding: 20px 0 16px; }
     }
   </style>
 </head>
