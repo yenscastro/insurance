@@ -1,0 +1,163 @@
+# NexusOS — Project Library
+# Share this file with teammates to set up their dev environment.
+# Each engineer creates their OWN API keys — never share key values.
+
+schema_version: "1.0"
+project: nexus-os
+description: "Vertical insurance agent OS — AI-coached dialer + CRM + carrier ranking + auto-quote"
+repo: "https://github.com/yenscastro/insurance"
+
+# ─── Required Environment Variables ───────────────────────────
+# Create a .env.local file with these keys. Never commit .env files.
+env_vars:
+  # Supabase (database, auth, realtime)
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    description: "Supabase project URL"
+    required: true
+    get_from: "https://supabase.com/dashboard → Project Settings → API"
+
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    description: "Supabase anonymous/public key"
+    required: true
+    get_from: "Same page as SUPABASE_URL"
+
+  - key: SUPABASE_SERVICE_ROLE_KEY
+    description: "Supabase service role key (server-side only, never expose to client)"
+    required: true
+    get_from: "Same page — DO NOT put in NEXT_PUBLIC_ prefixed var"
+
+  # Twilio (voice + SMS)
+  - key: TWILIO_ACCOUNT_SID
+    description: "Twilio account identifier"
+    required: true
+    get_from: "https://console.twilio.com → Account Info"
+
+  - key: TWILIO_AUTH_TOKEN
+    description: "Twilio auth token"
+    required: true
+    get_from: "Same page as Account SID"
+
+  - key: TWILIO_PHONE_NUMBER
+    description: "Twilio phone number for outbound calls/SMS (E.164 format: +1XXXXXXXXXX)"
+    required: true
+    get_from: "https://console.twilio.com → Phone Numbers → Buy a Number"
+
+  - key: TWILIO_TWIML_APP_SID
+    description: "TwiML App SID for browser Voice SDK"
+    required: true
+    get_from: "https://console.twilio.com → Voice → TwiML Apps → Create"
+
+  # Deepgram (speech-to-text)
+  - key: DEEPGRAM_API_KEY
+    description: "Deepgram streaming STT API key"
+    required: true
+    get_from: "https://console.deepgram.com → API Keys"
+
+  # Claude (AI extraction + coaching)
+  - key: ANTHROPIC_API_KEY
+    description: "Anthropic Claude API key for streaming tool-use"
+    required: true
+    get_from: "https://console.anthropic.com/settings/keys"
+
+  # Optional
+  - key: N8N_WEBHOOK_URL
+    description: "n8n instance webhook base URL (for workflow triggers)"
+    required: false
+    get_from: "Self-hosted n8n → Settings → Webhook URL"
+
+  - key: GOOGLE_SHEETS_CREDENTIALS
+    description: "Google Sheets service account JSON (for quote data push)"
+    required: false
+    get_from: "https://console.cloud.google.com → APIs & Services → Credentials"
+
+# ─── Tech Stack ───────────────────────────────────────────────
+stack:
+  framework: "Next.js 15 (App Router, React 19, TypeScript strict)"
+  ui: "shadcn/ui + Tailwind CSS v4 + Framer Motion"
+  database: "Supabase (Postgres 15+ with RLS, Realtime, Edge Functions, pgvector)"
+  auth: "Supabase Auth (SSO via Microsoft Entra / Google Workspace at scale)"
+  voice: "Twilio Voice SDK (browser-based softphone)"
+  transcription: "Deepgram Streaming API (real-time STT, speaker diarization)"
+  ai: "Anthropic Claude API (Sonnet, streaming tool-use for fact extraction)"
+  workflows: "n8n (self-hosted, carrier agent orchestration)"
+  hosting: "Vercel (frontend) + VPS with Traefik + Docker (backend services)"
+
+# ─── Setup Commands ───────────────────────────────────────────
+setup:
+  - step: "Clone the repository"
+    command: "git clone [REPO_URL] && cd nexus-os"
+  - step: "Install dependencies"
+    command: "npm install"
+  - step: "Copy environment template"
+    command: "cp .env.example .env.local"
+  - step: "Fill in your API keys in .env.local"
+    command: "# Edit .env.local with your keys from the get_from URLs above"
+  - step: "Start Supabase locally"
+    command: "npx supabase start"
+  - step: "Run database migrations"
+    command: "npx supabase db push"
+  - step: "Start dev server"
+    command: "npm run dev"
+  - step: "Start n8n (optional, for workflow testing)"
+    command: "docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n"
+
+# ─── Available Skills ─────────────────────────────────────────
+# These are Claude Code skills available for this project.
+# Teammates using OpenClaw: map these to equivalent capabilities.
+skills:
+  - name: tdd-workflow
+    description: "Test-driven development — write tests first, implement to pass"
+  - name: api-design
+    description: "REST API patterns — resource naming, status codes, pagination"
+  - name: backend-patterns
+    description: "Server-side architecture — API routes, data access, middleware"
+  - name: frontend-design
+    description: "UI/UX design intelligence — styles, palettes, font pairings"
+  - name: docker-patterns
+    description: "Docker + Compose for local dev and deployment"
+  - name: deployment-patterns
+    description: "CI/CD, health checks, rollback strategies"
+  - name: security-review
+    description: "Auth, input validation, secrets handling, API security"
+  - name: council
+    description: "Multi-model second opinions from GPT, Gemini, Grok, Perplexity"
+  - name: verify
+    description: "Output quality checks before delivery"
+  - name: diagnose
+    description: "Code quality scanning — DIAGNOSE, HEAL, PREVENT modes"
+
+# ─── MCPs (Model Context Protocol servers) ────────────────────
+mcps:
+  - name: "Claude Preview"
+    description: "Dev server management + browser testing inside Claude"
+  - name: "Scheduled Tasks"
+    description: "Cron-like recurring task scheduling"
+  - name: "Google Drive"
+    description: "Document search and collaboration"
+
+# ─── Project-Specific Agents (to be built) ────────────────────
+agents:
+  - name: carrier-agent-template
+    description: "Per-carrier sub-agent — receives transcript facts, queries carrier underwriting rules, returns structured quote"
+    tools: [Bash, Read, Grep]
+    model: sonnet
+
+  - name: quote-orchestrator
+    description: "Routes extracted transcript facts to carrier agents, aggregates quotes, ranks top 3, pushes to Google Sheets + CRM"
+    tools: [Bash, Read, Write, Agent]
+    model: sonnet
+
+  - name: coaching-engine
+    description: "Generates contextual script suggestions + underwriting follow-up prompts during live calls"
+    tools: [Read, Bash]
+    model: sonnet
+
+# ─── Key Architecture Decisions ───────────────────────────────
+decisions:
+  - "Deterministic rules engine for underwriting — NOT RAG. Auditable, fast, E&O-safe."
+  - "Claude tool-use for extraction, not fine-tuned model — flexibility, no training pipeline."
+  - "Browser softphone (Twilio Voice SDK), not hardware phone integration."
+  - "Dark theme, insurance-professional aesthetic."
+  - "Internal tool first, product later — reduces compliance surface."
+  - "Single-line dialer first — parallel dialing deferred for TCPA compliance."
+  - "Supabase RLS for multi-agent data isolation."

@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusOS — Engineering Context</title>
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    /* ── Tokens ─────────────────────────────────────────────────────── */
+    :root {
+      --bg:          #0a0a0a;
+      --bg-card:     #111111;
+      --bg-raised:   #161616;
+      --bg-code:     #0d0d0d;
+      --border:      #222222;
+      --border-dim:  #1a1a1a;
+      --text:        #e8e8e8;
+      --text-dim:    #888888;
+      --text-muted:  #555555;
+      --accent:      #4f8ef7;
+      --accent-dim:  #2c5ab3;
+      --accent-glow: rgba(79,142,247,0.12);
+      --green:       #3ecf8e;
+      --green-dim:   rgba(62,207,142,0.12);
+      --amber:       #f59e0b;
+      --amber-dim:   rgba(245,158,11,0.12);
+      --red:         #ef4444;
+      --red-dim:     rgba(239,68,68,0.12);
+      --purple:      #a78bfa;
+      --purple-dim:  rgba(167,139,250,0.12);
+      --font-sans:   -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono:   "SF Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+      --sidebar-w:   260px;
+      --radius:      6px;
+      --radius-lg:   10px;
+    }
+
+    /* ── Base ────────────────────────────────────────────────────────── */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+
+    /* ── Confidential banner ─────────────────────────────────────────── */
+    #confid-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: linear-gradient(90deg, #1a0a0a 0%, #1c0a0a 100%);
+      border-bottom: 1px solid rgba(239,68,68,0.3);
+      text-align: center;
+      padding: 6px 0;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--red);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    #confid-banner span { opacity: 0.5; margin: 0 16px; }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 56px 0 24px;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border-dim);
+      margin-bottom: 8px;
+    }
+    .sidebar-logo .product-name {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .sidebar-logo .product-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 2px;
+    }
+    .sidebar-logo .phase-badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      padding: 12px 20px 4px;
+    }
+    .nav-link {
+      display: block;
+      padding: 6px 20px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.15s, background 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--bg-raised);
+      border-left-color: var(--border);
+    }
+    .nav-link.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-dim);
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Main content ────────────────────────────────────────────────── */
+    #main {
+      margin-left: var(--sidebar-w);
+      padding: 80px 0 80px;
+      max-width: 100%;
+    }
+    .content-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 60px;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────────────── */
+    #hero {
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .hero-eyebrow {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #ffffff;
+    }
+    .hero-title .dim { color: var(--text-dim); font-weight: 400; }
+    .hero-subtitle {
+      margin-top: 12px;
+      font-size: 15px;
+      color: var(--text-dim);
+      max-width: 900px;
+      line-height: 1.6;
+    }
+    .hero-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .meta-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    .meta-value {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .meta-value.green { color: var(--green); }
+    .meta-value.amber { color: var(--amber); }
+
+    /* ── Sections ────────────────────────────────────────────────────── */
+    section {
+      padding: 56px 0 0;
+      border-top: 1px solid var(--border);
+      margin-top: 56px;
+    }
+    section:first-of-type { border-top: none; margin-top: 0; }
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .section-num {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin: 32px 0 14px;
+    }
+    p {
+      color: var(--text-dim);
+      font-size: 15px;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    p:last-child { margin-bottom: 0; }
+    strong { color: var(--text); font-weight: 600; }
+    em { color: var(--text-dim); font-style: italic; }
+
+    /* ── Cards ───────────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .card-body {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+    .card.moat {
+      background: linear-gradient(135deg, #0d1117 0%, #0a0f1a 100%);
+      border-color: var(--accent-dim);
+    }
+    .card.moat .card-title { color: var(--accent); }
+    .card.warning {
+      background: var(--amber-dim);
+      border-color: rgba(245,158,11,0.25);
+    }
+    .card.warning .card-title { color: var(--amber); }
+    .card.danger {
+      background: var(--red-dim);
+      border-color: rgba(239,68,68,0.25);
+    }
+    .card.danger .card-title { color: var(--red); }
+    .card.success {
+      background: var(--green-dim);
+      border-color: rgba(62,207,142,0.25);
+    }
+    .card.success .card-title { color: var(--green); }
+
+    /* ── Card grid ───────────────────────────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .card-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* ── Tables ──────────────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead tr {
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--border);
+    }
+    thead th {
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border-dim);
+      transition: background 0.1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg-raised); }
+    tbody td {
+      padding: 12px 20px;
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    tbody td:first-child { color: var(--text); font-weight: 500; }
+    td code, th code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--bg-code);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Code blocks ─────────────────────────────────────────────────── */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin: 16px 0 24px;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .code-filename {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #c9d1d9;
+    }
+    pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+    /* ── Syntax tokens ───────────────────────────────────────────────── */
+    .kw  { color: #ff7b72; }  /* keyword */
+    .ty  { color: #79c0ff; }  /* type / class */
+    .st  { color: #a5d6ff; }  /* string */
+    .cm  { color: #555; font-style: italic; }   /* comment */
+    .nu  { color: #79c0ff; }  /* number */
+    .fn  { color: #d2a8ff; }  /* function */
+    .ky  { color: #7ee787; }  /* key / attr */
+    .op  { color: #ff7b72; }  /* operator */
+    .pl  { color: #ffa657; }  /* plain / punctuation */
+
+    /* ── ASCII diagram ───────────────────────────────────────────────── */
+    .diagram {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #8b949e;
+      margin: 16px 0 24px;
+    }
+    .diagram .box   { color: #58a6ff; }
+    .diagram .arrow { color: #3ecf8e; }
+    .diagram .label { color: #c9d1d9; }
+
+    /* ── Inline code ─────────────────────────────────────────────────── */
+    code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #a5d6ff;
+    }
+
+    /* ── Lists ───────────────────────────────────────────────────────── */
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+    li {
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }
+    li strong { color: var(--text); }
+    li::marker { color: var(--text-muted); }
+
+    /* ── Timeline / week plan ────────────────────────────────────────── */
+    .week-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .week-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--border);
+    }
+    .week-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+    .week-badge.w1 { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-dim); }
+    .week-badge.w2 { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
+    .week-badge.w3 { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+    .week-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .week-body {
+      padding: 4px 0;
+      background: var(--bg-card);
+    }
+    .day-row {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 12px;
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--border-dim);
+      align-items: baseline;
+    }
+    .day-row:last-child { border-bottom: none; }
+    .day-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      padding-top: 2px;
+    }
+    .day-task {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .day-task strong { color: var(--text); }
+
+    /* ── Compliance pills ────────────────────────────────────────────── */
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+    .pill.red    { color: var(--red);    background: var(--red-dim);    border-color: rgba(239,68,68,0.3); }
+    .pill.amber  { color: var(--amber);  background: var(--amber-dim);  border-color: rgba(245,158,11,0.3); }
+    .pill.blue   { color: var(--accent); background: var(--accent-glow);border-color: var(--accent-dim); }
+    .pill.green  { color: var(--green);  background: var(--green-dim);  border-color: rgba(62,207,142,0.3); }
+    .pill.purple { color: var(--purple); background: var(--purple-dim); border-color: rgba(167,139,250,0.3); }
+
+    /* ── Decision badges ─────────────────────────────────────────────── */
+    .decision-list { list-style: none; padding: 0; }
+    .decision-list li {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-dim);
+      align-items: flex-start;
+    }
+    .decision-list li:last-child { border-bottom: none; }
+    .decision-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      font-family: var(--font-mono);
+    }
+    .decision-body { flex: 1; }
+    .decision-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .decision-why { font-size: 12.5px; color: var(--text-muted); }
+
+    /* ── Not-building list ───────────────────────────────────────────── */
+    .notbuilding {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .notbuilding li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12.5px;
+      color: var(--text-dim);
+    }
+    .notbuilding li::before {
+      content: "✕";
+      font-size: 10px;
+      color: var(--red);
+      flex-shrink: 0;
+    }
+
+    /* ── Env var block ───────────────────────────────────────────────── */
+    .env-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .env-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .env-key { color: var(--green); }
+    .env-eq  { color: var(--text-muted); }
+    .env-val { color: var(--text-muted); font-style: italic; }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+    /* ── File tree ───────────────────────────────────────────────────── */
+    .file-tree {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.8;
+      color: #8b949e;
+    }
+    .file-tree .dir  { color: #58a6ff; }
+    .file-tree .file { color: #c9d1d9; }
+    .file-tree .note { color: #555; font-style: italic; }
+
+    /* ── Reference products ──────────────────────────────────────────── */
+    .ref-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .ref-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .ref-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .ref-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .ref-relation {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .ref-relation.study { background: var(--accent-glow); color: var(--accent); }
+    .ref-relation.beat  { background: var(--green-dim);   color: var(--green); }
+    .ref-relation.ref   { background: var(--amber-dim);   color: var(--amber); }
+    .ref-relation.compl { background: var(--purple-dim);  color: var(--purple); }
+
+    /* ── Team table ──────────────────────────────────────────────────── */
+    .team-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+    }
+    .team-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .av-zazu { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-dim); }
+    .av-be   { background: var(--bg-raised);   color: var(--text-muted); border: 1px dashed var(--border); }
+    .team-info { flex: 1; }
+    .team-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .team-role { font-size: 11.5px; color: var(--text-muted); }
+    .team-focus { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Divider ─────────────────────────────────────────────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border-dim);
+      margin: 32px 0;
+    }
+
+    /* ── Note callout ────────────────────────────────────────────────── */
+    .callout {
+      display: flex;
+      gap: 14px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin: 16px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .callout.info    { background: var(--accent-glow); border: 1px solid var(--accent-dim); color: var(--accent); }
+    .callout.warning { background: var(--amber-dim);   border: 1px solid rgba(245,158,11,0.25); color: var(--amber); }
+    .callout.danger  { background: var(--red-dim);     border: 1px solid rgba(239,68,68,0.25); color: var(--red); }
+    .callout.success { background: var(--green-dim);   border: 1px solid rgba(62,207,142,0.25); color: var(--green); }
+    .callout-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { color: inherit; }
+    .callout-body strong { color: inherit; }
+    /* ── Print / PDF styles ─────────────────────────────────────────── */
+    @page {
+      size: letter landscape;
+      margin: 0.5in 0.6in;
+    }
+    @media print {
+      body {
+        display: block;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      #sidebar { display: none !important; }
+      #main {
+        margin-left: 0 !important;
+        padding: 20px 0 !important;
+      }
+      .content-wrap {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      #confid-banner {
+        position: static;
+        margin-bottom: 16px;
+        padding: 10px 0;
+      }
+      /* Force page break BEFORE every section for clear separation */
+      section {
+        page-break-before: always;
+        padding-top: 32px;
+        margin-top: 0;
+        border-top: none;
+      }
+      /* First section doesn't need a page break (it follows the hero) */
+      section:first-of-type {
+        page-break-before: avoid;
+      }
+      /* Never break inside these elements */
+      .card, .code-block, .table-wrap, table, .card-grid {
+        page-break-inside: avoid;
+      }
+      /* Keep headers with their content */
+      h2, h3, .section-header {
+        page-break-after: avoid;
+      }
+      .card-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .card-grid.three {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      pre {
+        font-size: 10.5px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 16px;
+      }
+      h2 { font-size: 18px; margin-bottom: 16px; }
+      h3 { font-size: 12px; margin-top: 20px; margin-bottom: 10px; }
+      .hero-title { font-size: 28px; }
+      .hero-subtitle { font-size: 13px; }
+      .section-header { margin-bottom: 20px; }
+      p { margin-bottom: 12px; font-size: 12px; line-height: 1.65; }
+      .card { padding: 16px 20px; margin-bottom: 10px; }
+      tbody td, thead th { padding: 8px 14px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Confidential banner -->
+<div id="confid-banner">
+  CONFIDENTIAL<span>·</span>INTERNAL USE ONLY<span>·</span>DO NOT DISTRIBUTE<span>·</span>NexusOS Engineering Brief<span>·</span>Last Updated: April 18, 2026
+</div>
+
+<!-- Sidebar nav -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="product-name">NexusOS</div>
+    <div class="product-sub">Insurance Agent OS</div>
+    <div class="phase-badge">MVP — Phase 1</div>
+  </div>
+
+  <div class="nav-section-label">Overview</div>
+  <a href="#overview"   class="nav-link">Project Overview</a>
+  <a href="#moat"       class="nav-link">The Moat</a>
+  <a href="#market"     class="nav-link">Market &amp; Business</a>
+
+  <div class="nav-section-label">Architecture</div>
+  <a href="#stack"      class="nav-link">Tech Stack</a>
+  <a href="#diagram"    class="nav-link">Architecture Diagram</a>
+  <a href="#datamodels" class="nav-link">Data Models</a>
+  <a href="#carrier-kb" class="nav-link">Carrier Knowledge Base</a>
+  <a href="#tool-schema"class="nav-link">AI Tool Schema</a>
+
+  <div class="nav-section-label">Build Plan</div>
+  <a href="#mvp-scope"  class="nav-link">MVP Demo Scope</a>
+  <a href="#schedule"   class="nav-link">3-Week Schedule</a>
+  <a href="#not-building" class="nav-link">Not Building</a>
+
+  <div class="nav-section-label">Guidance</div>
+  <a href="#compliance" class="nav-link">Compliance</a>
+  <a href="#rag"        class="nav-link">RAG / Knowledge Arch.</a>
+  <a href="#decisions"  class="nav-link">Key Decisions</a>
+  <a href="#references" class="nav-link">Reference Products</a>
+  <a href="#team"       class="nav-link">Team &amp; Roles</a>
+
+  <div class="nav-section-label">Getting Started</div>
+  <a href="#setup"      class="nav-link">Local Setup</a>
+  <a href="#structure"  class="nav-link">File Structure</a>
+
+  <div class="sidebar-footer">
+    NexusOS Engineering Brief<br>
+    Version 1.0 · April 2026<br><br>
+    Questions? Ping Zazu.
+  </div>
+</nav>
+
+<!-- Main content -->
+<div id="main">
+<div class="content-wrap">
+
+  <!-- ──────────────── HERO ──────────────── -->
+  <div id="hero">
+    <div class="hero-eyebrow">Engineering Context Document</div>
+    <h1 class="hero-title">NexusOS <span class="dim">/ Insurance Agent OS</span></h1>
+    <p class="hero-subtitle">
+      A vertical-integrated operating system for life insurance brokerages. Real-time AI underwriting coaching layered directly into the dialer — not an overlay, not a plugin. Built-in.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item">
+        <span class="meta-label">Build window</span>
+        <span class="meta-value amber">3 Weeks to Demo</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">First client</span>
+        <span class="meta-value">2,500-agent brokerage</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Target MRR</span>
+        <span class="meta-value green">$2.5M</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Phase</span>
+        <span class="meta-value">MVP — Demo-ready</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────── OVERVIEW ──────────────── -->
+  <section id="overview">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Project Overview</h2>
+    </div>
+
+    <p>
+      NexusOS is a <strong>vertically integrated insurance agent operating system</strong>. It is not a generic CRM. It is not GoHighLevel with an insurance skin. It is a purpose-built platform that unifies every workflow a life insurance agent touches — from lead intake to policy bind — with an AI layer that is embedded in the call itself.
+    </p>
+
+    <div class="card-grid" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-title">CRM Pipeline</div>
+        <div class="card-body">GHL-inspired drag-drop stages with auto-triggered SMS/email workflows on stage transitions.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Power Dialer</div>
+        <div class="card-body">Browser-based softphone via Twilio Voice SDK. Single-line MVP, parallel dialer deferred for TCPA architecture.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Live Transcription</div>
+        <div class="card-body">Deepgram streaming STT with speaker diarization. &lt;2 second latency. Captions render in-call.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">AI Underwriting Extraction</div>
+        <div class="card-body">Claude tool-use fires every 3 seconds on new transcript chunks. Extracts structured health facts.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Carrier Ranking Engine</div>
+        <div class="card-body">Deterministic TypeScript function. Ranks carriers live as health facts emerge. Auditable, E&amp;O-defensible.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Auto-Quote Generator</div>
+        <div class="card-body">Post-call quote comparison: top 3 carriers with monthly premiums and the reason each was ranked.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Commission Dashboard</div>
+        <div class="card-body">Policy tracking, chargeback alerts, expected vs. paid commission ledger.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Agent Leaderboard</div>
+        <div class="card-body">KPIs: calls made, policies written, revenue. Snapshotted per period.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── MOAT ──────────────── -->
+  <section id="moat">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>The Moat</h2>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠</div>
+      <div class="callout-body">
+        <strong>The moat is the AI cockpit.</strong> This is what makes the product defensible. Generic tools like Cluely, Gong, and Chorus overlay Zoom/Meet with general sales suggestions. We are not doing that.
+      </div>
+    </div>
+
+    <div class="card moat" style="margin-top:16px;">
+      <div class="card-title">What We Do That Nobody Else Does</div>
+      <div class="card-body">
+        <ul style="margin-top:8px;">
+          <li>Listens for <strong>medical conditions</strong> during the call and triggers insurance-specific follow-up questions automatically</li>
+          <li style="margin-top:8px;">Example: client says <em>"I have diabetes"</em> → AI coaching panel injects: <em>"Type 1 or Type 2? A1C level? When diagnosed? Insulin or metformin?"</em></li>
+          <li style="margin-top:8px;">Maintains a <strong>structured underwriting fact panel</strong> that updates in real-time as answers come in</li>
+          <li style="margin-top:8px;"><strong>Re-ranks carriers live</strong> as new health facts emerge — different carriers have different underwriting tolerances</li>
+          <li style="margin-top:8px;">Post-call: generates a quote comparison showing top 3 carriers with premiums <em>and the reason</em> each was ranked (e.g., "Mutual of Omaha accepts A1C under 7.5 with 3+ years since diagnosis")</li>
+          <li style="margin-top:8px;">All of this is <strong>deterministic rules, not RAG, not hallucination</strong>. Auditable. E&amp;O-defensible.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Why RAG Would Kill Us Here</h3>
+    <p>If the ranking engine hallucinates a carrier that accepts a condition it doesn't actually accept, and an agent relies on that ranking and submits an app, the brokerage has an Errors &amp; Omissions claim. The ranking logic must be deterministic, structured, and auditable. RAG is reserved for Phase 2+ features like objection handling libraries and historical call search.</p>
+  </section>
+
+  <!-- ──────────────── MARKET ──────────────── -->
+  <section id="market">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Market &amp; Business Context</h2>
+    </div>
+
+    <div class="card-grid three">
+      <div class="card success">
+        <div class="card-title">First Client</div>
+        <div class="card-body">Life insurance brokerage with <strong>2,500 independent agents</strong>. They currently use LeadChampPro (GHL skin). We have login access.</div>
+      </div>
+      <div class="card success">
+        <div class="card-title">Pricing Target</div>
+        <div class="card-body"><strong>~$1,000/agent/month.</strong> At 2,500 agents full adoption, that's <strong>$2.5M MRR</strong>.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 2</div>
+        <div class="card-body">Replicate for <strong>healthcare insurance</strong>. Same platform skeleton, different carrier APIs and underwriting rules.</div>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:20px;">
+      <div class="callout-icon">→</div>
+      <div class="callout-body">
+        <strong>Exit thesis:</strong> "The last software before AI fully automates insurance sales." Build the dominant vertical platform now, sell before full automation makes the human agent obsolete.
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── STACK ──────────────── -->
+  <section id="stack">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Tech Stack</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Frontend</td>
+            <td><strong>Next.js 15 + React 19</strong></td>
+            <td>App router, server components throughout</td>
+          </tr>
+          <tr>
+            <td>UI</td>
+            <td><strong>shadcn/ui + Tailwind CSS v4 + Framer Motion</strong></td>
+            <td>Dark theme, LeadChampPro-level polish</td>
+          </tr>
+          <tr>
+            <td>Backend / DB</td>
+            <td><strong>Supabase</strong></td>
+            <td>Postgres + RLS + Edge Functions + Realtime + pgvector. Row-level security per agent/agency.</td>
+          </tr>
+          <tr>
+            <td>Auth</td>
+            <td><strong>Supabase Auth</strong></td>
+            <td>SSO later — Microsoft Entra / Google Workspace. 2,500 agents means SSO is mandatory at scale.</td>
+          </tr>
+          <tr>
+            <td>Voice / Dialer</td>
+            <td><strong>Twilio Voice SDK</strong></td>
+            <td>Browser-based softphone. Single outbound line for MVP. Parallel dialer deferred.</td>
+          </tr>
+          <tr>
+            <td>Transcription</td>
+            <td><strong>Deepgram Streaming API</strong></td>
+            <td>Real-time STT, speaker diarization, &lt;2s latency target</td>
+          </tr>
+          <tr>
+            <td>AI Extraction</td>
+            <td><strong>Claude API (Sonnet, streaming tool-use)</strong></td>
+            <td><code>extract_underwriting_facts()</code> tool, fires every 3s on new transcript chunks</td>
+          </tr>
+          <tr>
+            <td>Coaching Engine</td>
+            <td><strong>Deterministic rules + Claude</strong></td>
+            <td>Rules for underwriting triggers; Claude generates natural language coaching prompts</td>
+          </tr>
+          <tr>
+            <td>Carrier Knowledge</td>
+            <td><strong>Static JSON → Postgres tables</strong></td>
+            <td>Hand-authored underwriting matrices per carrier. Phase 2: real carrier API feeds.</td>
+          </tr>
+          <tr>
+            <td>Ranking Engine</td>
+            <td><strong>Pure TypeScript function</strong></td>
+            <td>Takes extracted facts + coverage amount → ranked carrier list with reasons. Deterministic.</td>
+          </tr>
+          <tr>
+            <td>Quote Generator</td>
+            <td><strong>Pure TypeScript (MVP) → carrier APIs (Phase 2)</strong></td>
+            <td>Static rate formulas for demo. Produces realistic premiums.</td>
+          </tr>
+          <tr>
+            <td>Workflows / SMS</td>
+            <td><strong>n8n self-hosted OR Supabase Edge Functions + Twilio SMS</strong></td>
+            <td>Pipeline stage change → auto-SMS. Choose at kickoff.</td>
+          </tr>
+          <tr>
+            <td>Hosting</td>
+            <td><strong>VPS + Traefik + Docker</strong></td>
+            <td>Existing infra. Alternatively: Vercel (frontend) + Supabase (backend).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-icon">⚠</div>
+      <div class="callout-body">
+        <strong>VPS routing rule:</strong> Traefik is the ONLY reverse proxy. All routes go via docker-compose.yaml Traefik labels. Do not touch or create nginx configs — they are deprecated.
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── DIAGRAM ──────────────── -->
+  <section id="diagram">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Architecture Diagram</h2>
+    </div>
+
+    <style>
+      .arch-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        padding: 40px 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow-x: auto;
+      }
+      .arch-box {
+        background: var(--bg-raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 24px;
+        text-align: center;
+        position: relative;
+        min-width: 200px;
+      }
+      .arch-box.wide { min-width: 600px; max-width: 800px; width: 100%; }
+      .arch-box.accent { border-color: var(--accent-dim); background: linear-gradient(135deg, #0d1117 0%, #0a0f1a 100%); }
+      .arch-box.green-b { border-color: rgba(62,207,142,0.3); }
+      .arch-box.purple-b { border-color: rgba(167,139,250,0.3); }
+      .arch-box-title {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .arch-box-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .arch-box-sub {
+        font-size: 12px;
+        color: var(--text-dim);
+        margin-top: 4px;
+      }
+      .arch-box-detail {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 6px;
+        font-family: var(--font-mono);
+      }
+      .arch-row {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .arch-row .arch-box { flex: 1; min-width: 160px; max-width: 220px; }
+      .arch-arrow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 0;
+        color: var(--accent);
+        font-size: 18px;
+        line-height: 1;
+      }
+      .arch-arrow-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        letter-spacing: 0.05em;
+      }
+      .arch-arrow-wide {
+        display: flex;
+        justify-content: center;
+        gap: 80px;
+        padding: 8px 0;
+        color: var(--accent);
+        font-size: 18px;
+      }
+      .arch-output {
+        font-size: 12px;
+        color: var(--green);
+        font-family: var(--font-mono);
+        padding: 2px 10px;
+        background: var(--green-dim);
+        border-radius: 3px;
+        margin-left: 12px;
+        white-space: nowrap;
+      }
+      .arch-inner-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .arch-inner-box {
+        background: var(--bg-code);
+        border: 1px solid var(--border-dim);
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-size: 12px;
+        color: var(--text-dim);
+        text-align: center;
+      }
+      .arch-db-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 24px;
+        margin-top: 10px;
+        text-align: left;
+      }
+      .arch-db-list span {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        color: var(--text-dim);
+      }
+    </style>
+
+    <div class="arch-diagram">
+      <!-- Layer 1: Agent Browser UI -->
+      <div class="arch-box wide accent">
+        <div class="arch-box-title">Frontend</div>
+        <div class="arch-box-name">Agent Browser UI</div>
+        <div class="arch-inner-row">
+          <div class="arch-inner-box">Pipeline Board</div>
+          <div class="arch-inner-box">AI Cockpit (Call View)</div>
+          <div class="arch-inner-box">Dashboard / KPIs</div>
+          <div class="arch-inner-box">Commissions</div>
+        </div>
+        <div class="arch-inner-row">
+          <div class="arch-inner-box" style="border-color: var(--accent-dim); color: var(--accent);">Twilio Voice SDK (browser softphone)</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">
+        <span>&#9660;</span>
+        <span class="arch-arrow-label">audio stream</span>
+      </div>
+
+      <!-- Layer 2: Deepgram -->
+      <div class="arch-box" style="display:flex; align-items:center; gap:16px; justify-content:center;">
+        <div>
+          <div class="arch-box-title">Transcription</div>
+          <div class="arch-box-name">Deepgram Streaming</div>
+          <div class="arch-box-sub">Real-time STT + speaker diarization</div>
+        </div>
+        <span style="color:var(--accent); font-size:20px;">&#8594;</span>
+        <span class="arch-output">Raw transcript</span>
+      </div>
+
+      <div class="arch-arrow">
+        <span>&#9660;</span>
+        <span class="arch-arrow-label">transcript chunks (every 3s)</span>
+      </div>
+
+      <!-- Layer 3: Claude Extraction -->
+      <div class="arch-box purple-b" style="display:flex; align-items:center; gap:16px; justify-content:center;">
+        <div>
+          <div class="arch-box-title">AI Extraction</div>
+          <div class="arch-box-name">Claude Tool-Use</div>
+          <div class="arch-box-sub">extract_underwriting_facts()</div>
+        </div>
+        <span style="color:var(--accent); font-size:20px;">&#8594;</span>
+        <span class="arch-output">{condition, a1c, meds, tobacco, bmi}</span>
+      </div>
+
+      <div class="arch-arrow">
+        <span>&#9660;</span>
+        <span class="arch-arrow-label">structured facts</span>
+      </div>
+
+      <!-- Layer 4: Ranking Engine -->
+      <div class="arch-box green-b" style="display:flex; align-items:center; gap:16px; justify-content:center;">
+        <div>
+          <div class="arch-box-title">Deterministic Engine</div>
+          <div class="arch-box-name">Carrier Ranking</div>
+          <div class="arch-box-sub">TypeScript rules engine &mdash; no LLM, no RAG</div>
+        </div>
+        <span style="color:var(--accent); font-size:20px;">&#8594;</span>
+        <span class="arch-output">Top 3 carriers + reasons</span>
+      </div>
+
+      <div class="arch-arrow-wide">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <span>&#9660;</span>
+          <span class="arch-arrow-label">writes</span>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <span>&#9660;</span>
+          <span class="arch-arrow-label">writes</span>
+        </div>
+      </div>
+
+      <!-- Layer 5: Supabase -->
+      <div class="arch-box wide" style="border-color: var(--green); border-width:2px;">
+        <div class="arch-box-title">Database</div>
+        <div class="arch-box-name">Supabase (Postgres)</div>
+        <div class="arch-db-list">
+          <span>&#8226; contacts, policies, pipelines</span>
+          <span>&#8226; commissions, renewals</span>
+          <span>&#8226; transcripts, extracted facts</span>
+          <span>&#8226; RLS per agent / agency</span>
+          <span>&#8226; carrier rules (JSON &rarr; tables)</span>
+          <span>&#8226; audit log (append-only)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── DATA MODELS ──────────────── -->
+  <section id="datamodels">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>Data Models</h2>
+    </div>
+
+    <p>All tables live in Supabase (Postgres). Row-level security is enforced at the database level — agents can only read their own contacts; agency admins can read their agents' data; super-admins see everything.</p>
+
+    <h3>Core Entities</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">sql</span>
+        <span class="code-filename">supabase/migrations/001_core.sql</span>
+      </div>
+      <pre><code><span class="cm">-- Contacts (leads / clients)</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">contacts</span> (
+  <span class="ky">id</span>                  <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">first_name</span>          <span class="ty">text</span> <span class="kw">NOT NULL</span>,
+  <span class="ky">last_name</span>           <span class="ty">text</span> <span class="kw">NOT NULL</span>,
+  <span class="ky">phone</span>               <span class="ty">text</span>,
+  <span class="ky">email</span>               <span class="ty">text</span>,
+  <span class="ky">dob</span>                 <span class="ty">date</span>,
+  <span class="ky">state</span>               <span class="ty">char(2)</span>,
+  <span class="ky">created_by_agent_id</span> <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agents</span>(<span class="ky">id</span>),
+  <span class="ky">created_at</span>          <span class="ty">timestamptz</span> <span class="kw">DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="cm">-- Policies</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">policies</span> (
+  <span class="ky">id</span>              <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">contact_id</span>      <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">contacts</span>(<span class="ky">id</span>),
+  <span class="ky">carrier_id</span>      <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">carriers</span>(<span class="ky">id</span>),
+  <span class="ky">product_type</span>    <span class="ty">text</span>,  <span class="cm">-- term_20, whole_life, etc.</span>
+  <span class="ky">coverage_amount</span> <span class="ty">integer</span>,
+  <span class="ky">premium</span>         <span class="ty">numeric(10,2)</span>,
+  <span class="ky">status</span>          <span class="ty">text</span>,  <span class="cm">-- active, lapsed, chargedback, pending</span>
+  <span class="ky">effective_date</span>  <span class="ty">date</span>,
+  <span class="ky">expiry_date</span>     <span class="ty">date</span>
+);
+
+<span class="cm">-- Pipeline</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">pipeline_stages</span> (
+  <span class="ky">id</span>                <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">name</span>              <span class="ty">text</span> <span class="kw">NOT NULL</span>,
+  <span class="ky">position</span>          <span class="ty">integer</span>,
+  <span class="ky">auto_sms_template</span> <span class="ty">text</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="ty">pipeline_cards</span> (
+  <span class="ky">id</span>         <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">contact_id</span> <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">contacts</span>(<span class="ky">id</span>),
+  <span class="ky">stage_id</span>   <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">pipeline_stages</span>(<span class="ky">id</span>),
+  <span class="ky">agent_id</span>   <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agents</span>(<span class="ky">id</span>),
+  <span class="ky">moved_at</span>   <span class="ty">timestamptz</span> <span class="kw">DEFAULT</span> <span class="fn">now</span>()
+);</code></pre>
+    </div>
+
+    <h3>Voice / AI Tables</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">sql</span>
+        <span class="code-filename">supabase/migrations/002_voice_ai.sql</span>
+      </div>
+      <pre><code><span class="cm">-- Call sessions</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">call_sessions</span> (
+  <span class="ky">id</span>              <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">agent_id</span>        <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agents</span>(<span class="ky">id</span>),
+  <span class="ky">contact_id</span>      <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">contacts</span>(<span class="ky">id</span>),
+  <span class="ky">twilio_call_sid</span> <span class="ty">text</span>,
+  <span class="ky">started_at</span>      <span class="ty">timestamptz</span>,
+  <span class="ky">ended_at</span>        <span class="ty">timestamptz</span>,
+  <span class="ky">recording_url</span>   <span class="ty">text</span>
+);
+
+<span class="cm">-- Raw transcripts (per utterance)</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">transcripts</span> (
+  <span class="ky">id</span>               <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">call_session_id</span>  <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">call_sessions</span>(<span class="ky">id</span>),
+  <span class="ky">speaker</span>          <span class="ty">text</span>,  <span class="cm">-- 'agent' | 'client'</span>
+  <span class="ky">text</span>             <span class="ty">text</span>,
+  <span class="ky">timestamp_ms</span>     <span class="ty">integer</span>
+);
+
+<span class="cm">-- Extracted underwriting facts</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">extracted_facts</span> (
+  <span class="ky">id</span>               <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">call_session_id</span>  <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">call_sessions</span>(<span class="ky">id</span>),
+  <span class="ky">contact_id</span>       <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">contacts</span>(<span class="ky">id</span>),
+  <span class="ky">fact_type</span>        <span class="ty">text</span>,   <span class="cm">-- 'condition', 'tobacco', 'medication', etc.</span>
+  <span class="ky">fact_key</span>         <span class="ty">text</span>,
+  <span class="ky">fact_value</span>       <span class="ty">jsonb</span>,
+  <span class="ky">confidence</span>       <span class="ty">numeric(4,3)</span>,
+  <span class="ky">extracted_at</span>     <span class="ty">timestamptz</span> <span class="kw">DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="cm">-- Live carrier rankings (updated during call)</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">carrier_rankings</span> (
+  <span class="ky">id</span>               <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">call_session_id</span>  <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">call_sessions</span>(<span class="ky">id</span>),
+  <span class="ky">carrier_id</span>       <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">carriers</span>(<span class="ky">id</span>),
+  <span class="ky">rank</span>             <span class="ty">integer</span>,
+  <span class="ky">score</span>            <span class="ty">numeric(6,3)</span>,
+  <span class="ky">reason</span>           <span class="ty">text</span>,
+  <span class="ky">ranked_at</span>        <span class="ty">timestamptz</span> <span class="kw">DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="cm">-- Post-call quotes</span>
+<span class="kw">CREATE TABLE</span> <span class="ty">quotes</span> (
+  <span class="ky">id</span>               <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">call_session_id</span>  <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">call_sessions</span>(<span class="ky">id</span>),
+  <span class="ky">carrier_id</span>       <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">carriers</span>(<span class="ky">id</span>),
+  <span class="ky">product_type</span>     <span class="ty">text</span>,
+  <span class="ky">coverage_amount</span>  <span class="ty">integer</span>,
+  <span class="ky">monthly_premium</span>  <span class="ty">numeric(10,2)</span>,
+  <span class="ky">annual_premium</span>   <span class="ty">numeric(10,2)</span>,
+  <span class="ky">notes</span>            <span class="ty">text</span>
+);</code></pre>
+    </div>
+
+    <h3>Agent Management</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">sql</span>
+        <span class="code-filename">supabase/migrations/003_agents.sql</span>
+      </div>
+      <pre><code><span class="kw">CREATE TABLE</span> <span class="ty">agencies</span> (
+  <span class="ky">id</span>             <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">name</span>           <span class="ty">text</span> <span class="kw">NOT NULL</span>,
+  <span class="ky">owner_agent_id</span> <span class="ty">uuid</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="ty">agents</span> (
+  <span class="ky">id</span>         <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">name</span>       <span class="ty">text</span> <span class="kw">NOT NULL</span>,
+  <span class="ky">email</span>      <span class="ty">text</span> <span class="kw">UNIQUE NOT NULL</span>,
+  <span class="ky">role</span>       <span class="ty">text</span>,  <span class="cm">-- 'agent' | 'manager' | 'admin'</span>
+  <span class="ky">agency_id</span>  <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agencies</span>(<span class="ky">id</span>),
+  <span class="ky">created_at</span> <span class="ty">timestamptz</span> <span class="kw">DEFAULT</span> <span class="fn">now</span>()
+);
+
+<span class="kw">CREATE TABLE</span> <span class="ty">commissions</span> (
+  <span class="ky">id</span>            <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">agent_id</span>      <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agents</span>(<span class="ky">id</span>),
+  <span class="ky">policy_id</span>     <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">policies</span>(<span class="ky">id</span>),
+  <span class="ky">carrier_id</span>    <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">carriers</span>(<span class="ky">id</span>),
+  <span class="ky">amount</span>        <span class="ty">numeric(10,2)</span>,
+  <span class="ky">status</span>        <span class="ty">text</span>,  <span class="cm">-- 'expected' | 'paid' | 'chargedback'</span>
+  <span class="ky">expected_date</span> <span class="ty">date</span>,
+  <span class="ky">paid_date</span>     <span class="ty">date</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="ty">leaderboard_snapshots</span> (
+  <span class="ky">id</span>               <span class="ty">uuid</span> <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid</span>(),
+  <span class="ky">agent_id</span>         <span class="ty">uuid</span> <span class="kw">REFERENCES</span> <span class="ty">agents</span>(<span class="ky">id</span>),
+  <span class="ky">period</span>           <span class="ty">text</span>,  <span class="cm">-- 'daily' | 'weekly' | 'monthly'</span>
+  <span class="ky">calls_made</span>       <span class="ty">integer</span>,
+  <span class="ky">policies_written</span> <span class="ty">integer</span>,
+  <span class="ky">revenue</span>          <span class="ty">numeric(12,2)</span>,
+  <span class="ky">rank</span>             <span class="ty">integer</span>
+);</code></pre>
+    </div>
+  </section>
+
+  <!-- ──────────────── CARRIER KB ──────────────── -->
+  <section id="carrier-kb">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Carrier Knowledge Base Schema</h2>
+    </div>
+
+    <p>
+      Carrier underwriting rules live as <strong>hand-authored JSON files</strong> in <code>data/carriers/</code> and are loaded into Postgres on migration. The ranking engine queries Postgres directly — never the raw JSON at runtime. Start with 5 carriers for the MVP demo.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">json</span>
+        <span class="code-filename">data/carriers/mutual_of_omaha.json</span>
+      </div>
+      <pre><code>{
+  <span class="ky">"carrier_id"</span>: <span class="st">"mutual_of_omaha"</span>,
+  <span class="ky">"name"</span>: <span class="st">"Mutual of Omaha"</span>,
+  <span class="ky">"products"</span>: [<span class="st">"term_10"</span>, <span class="st">"term_20"</span>, <span class="st">"term_30"</span>, <span class="st">"whole_life"</span>, <span class="st">"final_expense"</span>],
+  <span class="ky">"underwriting_rules"</span>: {
+    <span class="ky">"diabetes"</span>: {
+      <span class="ky">"type_1"</span>: { <span class="ky">"accepted"</span>: <span class="kw">false</span> },
+      <span class="ky">"type_2"</span>: {
+        <span class="ky">"accepted"</span>: <span class="kw">true</span>,
+        <span class="ky">"max_a1c"</span>: <span class="nu">7.5</span>,
+        <span class="ky">"min_years_since_diagnosis"</span>: <span class="nu">1</span>,
+        <span class="ky">"excluded_medications"</span>: [<span class="st">"insulin_pump"</span>],
+        <span class="ky">"accepted_medications"</span>: [<span class="st">"metformin"</span>, <span class="st">"insulin_injection"</span>, <span class="st">"glipizide"</span>]
+      }
+    },
+    <span class="ky">"tobacco"</span>: {
+      <span class="ky">"current_user"</span>: { <span class="ky">"accepted"</span>: <span class="kw">true</span>, <span class="ky">"rate_class"</span>: <span class="st">"smoker"</span> },
+      <span class="ky">"quit_years_for_nonsmoker"</span>: <span class="nu">3</span>
+    },
+    <span class="ky">"bmi"</span>: { <span class="ky">"min"</span>: <span class="nu">16</span>, <span class="ky">"max"</span>: <span class="nu">40</span> },
+    <span class="ky">"age"</span>: { <span class="ky">"min"</span>: <span class="nu">18</span>, <span class="ky">"max"</span>: <span class="nu">80</span> },
+    <span class="ky">"max_coverage"</span>: <span class="nu">500000</span>
+  },
+  <span class="ky">"rate_table"</span>: {
+    <span class="ky">"term_20"</span>: {
+      <span class="ky">"preferred_plus"</span>: { <span class="ky">"30_male_500k"</span>: <span class="nu">25.50</span> },
+      <span class="ky">"standard"</span>:       { <span class="ky">"30_male_500k"</span>: <span class="nu">35.00</span> },
+      <span class="ky">"smoker"</span>:         { <span class="ky">"30_male_500k"</span>: <span class="nu">85.00</span> }
+    }
+  }
+}</code></pre>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠</div>
+      <div class="callout-body">
+        <strong>Never use RAG to serve ranking decisions.</strong> Carrier rules must be deterministic Postgres queries. RAG may serve agent coaching scripts only, and only in Phase 2+.
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── TOOL SCHEMA ──────────────── -->
+  <section id="tool-schema">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>AI Tool Schema</h2>
+    </div>
+
+    <p>
+      The Claude API is called via <strong>streaming tool-use</strong> on a background interval (every ~3 seconds) as new transcript chunks arrive. The tool fires only when there is new content since the last extraction. The extracted object is merged into the running underwriting facts panel in Supabase Realtime.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">json</span>
+        <span class="code-filename">lib/ai/tool-schema.ts → extract_underwriting_facts</span>
+      </div>
+      <pre><code>{
+  <span class="ky">"name"</span>: <span class="st">"extract_underwriting_facts"</span>,
+  <span class="ky">"description"</span>: <span class="st">"Extract medical and demographic facts from an insurance call transcript for underwriting evaluation"</span>,
+  <span class="ky">"input_schema"</span>: {
+    <span class="ky">"type"</span>: <span class="st">"object"</span>,
+    <span class="ky">"properties"</span>: {
+      <span class="ky">"age"</span>:             { <span class="ky">"type"</span>: <span class="st">"integer"</span> },
+      <span class="ky">"gender"</span>:          { <span class="ky">"type"</span>: <span class="st">"string"</span>, <span class="ky">"enum"</span>: [<span class="st">"male"</span>, <span class="st">"female"</span>] },
+      <span class="ky">"state"</span>:           { <span class="ky">"type"</span>: <span class="st">"string"</span>, <span class="ky">"description"</span>: <span class="st">"2-letter US state code"</span> },
+      <span class="ky">"coverage_amount"</span>: { <span class="ky">"type"</span>: <span class="st">"integer"</span>, <span class="ky">"description"</span>: <span class="st">"Requested coverage in dollars"</span> },
+      <span class="ky">"coverage_type"</span>: {
+        <span class="ky">"type"</span>: <span class="st">"string"</span>,
+        <span class="ky">"enum"</span>: [<span class="st">"term_10"</span>, <span class="st">"term_20"</span>, <span class="st">"term_30"</span>, <span class="st">"whole_life"</span>, <span class="st">"iul"</span>, <span class="st">"ul"</span>, <span class="st">"final_expense"</span>]
+      },
+      <span class="ky">"conditions"</span>: {
+        <span class="ky">"type"</span>: <span class="st">"array"</span>,
+        <span class="ky">"items"</span>: {
+          <span class="ky">"type"</span>: <span class="st">"object"</span>,
+          <span class="ky">"properties"</span>: {
+            <span class="ky">"condition"</span>: { <span class="ky">"type"</span>: <span class="st">"string"</span> },
+            <span class="ky">"details"</span>:   { <span class="ky">"type"</span>: <span class="st">"object"</span> }
+          }
+        }
+      },
+      <span class="ky">"tobacco_status"</span>:   { <span class="ky">"type"</span>: <span class="st">"string"</span>, <span class="ky">"enum"</span>: [<span class="st">"current"</span>, <span class="st">"former"</span>, <span class="st">"never"</span>] },
+      <span class="ky">"tobacco_quit_date"</span>: { <span class="ky">"type"</span>: <span class="st">"string"</span>, <span class="ky">"format"</span>: <span class="st">"date"</span> },
+      <span class="ky">"medications"</span>:      { <span class="ky">"type"</span>: <span class="st">"array"</span>, <span class="ky">"items"</span>: { <span class="ky">"type"</span>: <span class="st">"string"</span> } },
+      <span class="ky">"family_history"</span>:   { <span class="ky">"type"</span>: <span class="st">"array"</span>, <span class="ky">"items"</span>: { <span class="ky">"type"</span>: <span class="st">"string"</span> } },
+      <span class="ky">"height_inches"</span>:    { <span class="ky">"type"</span>: <span class="st">"integer"</span> },
+      <span class="ky">"weight_lbs"</span>:       { <span class="ky">"type"</span>: <span class="st">"integer"</span> }
+    }
+  }
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- ──────────────── MVP SCOPE ──────────────── -->
+  <section id="mvp-scope">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>MVP Demo Scope</h2>
+    </div>
+
+    <p>The MVP is a <strong>live demo</strong>, not a production system. It must perform a scripted end-to-end walkthrough flawlessly. Every feature listed below must work on demo day with seeded data.</p>
+
+    <div class="card moat">
+      <div class="card-title">The Demo Script (8 Steps)</div>
+      <div class="card-body">
+        <ol style="margin-top:8px; line-height:2.1;">
+          <li>Agent opens cockpit → sees lead in pipeline board</li>
+          <li>Clicks "Dial" → browser softphone connects to client</li>
+          <li>Client mentions age + coverage amount → carrier shortlist populates</li>
+          <li>Client says <em>"I have Type 2 diabetes"</em> → coaching panel injects follow-up questions</li>
+          <li>Client answers A1C, meds, diagnosis date → fact panel updates, carriers re-rank in real-time</li>
+          <li>Client mentions smoking history → another re-rank with animated transition</li>
+          <li>Call ends → quote comparison renders: top 3 carriers with monthly premiums + ranked reasons</li>
+          <li>Agent drags pipeline card → SMS fires to client's phone</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── 3-WEEK SCHEDULE ──────────────── -->
+  <section id="schedule">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>3-Week Build Schedule</h2>
+    </div>
+
+    <div class="week-block">
+      <div class="week-header">
+        <span class="week-badge w1">Week 1</span>
+        <span class="week-title">Voice Pipe — Get audio in, transcription out, AI extracting</span>
+      </div>
+      <div class="week-body">
+        <div class="day-row">
+          <span class="day-label">Day 1</span>
+          <span class="day-task"><strong>Scaffold:</strong> Next.js + Supabase, auth stub, shadcn dark theme, 3-stage pipeline board UI</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 2</span>
+          <span class="day-task"><strong>Dialer:</strong> Twilio Voice SDK browser softphone — outbound dial, 2-way audio, call lifecycle hooks</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 3</span>
+          <span class="day-task"><strong>Transcription:</strong> Deepgram streaming STT wired to call audio, live captions rendered in cockpit UI</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 4</span>
+          <span class="day-task"><strong>AI extraction:</strong> Claude streaming tool-use backend, fact extraction schema, structured facts panel in UI</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 5</span>
+          <span class="day-task"><strong>Carrier KB:</strong> JSON knowledge base for 5 carriers, unit tests for ranking logic, Postgres migration</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="week-block">
+      <div class="week-header">
+        <span class="week-badge w2">Week 2</span>
+        <span class="week-title">Moat Layer — The differentiating features that make the demo land</span>
+      </div>
+      <div class="week-body">
+        <div class="day-row">
+          <span class="day-label">Day 6</span>
+          <span class="day-task"><strong>Coaching panel:</strong> Condition-triggered follow-up questions render contextually during call</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 7</span>
+          <span class="day-task"><strong>Live re-ranking:</strong> Carrier list animates with Framer Motion transitions + reason tags on each re-rank</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 8</span>
+          <span class="day-task"><strong>Post-call quote:</strong> Quote comparison screen — top 3 carriers, monthly premiums, ranked reasons</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 9</span>
+          <span class="day-task"><strong>SMS trigger:</strong> Pipeline stage-change fires Twilio SMS to contact; confirm delivery receipt in UI</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 10</span>
+          <span class="day-task"><strong>Dashboard shell:</strong> Mock KPI cards, commission ledger, agent leaderboard — seeded with demo data</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="week-block">
+      <div class="week-header">
+        <span class="week-badge w3">Week 3</span>
+        <span class="week-title">Polish + Demo — Make it bulletproof</span>
+      </div>
+      <div class="week-body">
+        <div class="day-row">
+          <span class="day-label">Day 11–12</span>
+          <span class="day-task"><strong>Visual polish:</strong> Motion design, typography pass, spacing, color consistency, interaction micro-animations</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 13</span>
+          <span class="day-task"><strong>Dry run:</strong> End-to-end demo rehearsal with seeded data; fix anything that breaks</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 14</span>
+          <span class="day-task"><strong>Backup demo:</strong> Record high-quality video walkthrough as fallback if live demo has connectivity issues</span>
+        </div>
+        <div class="day-row">
+          <span class="day-label">Day 15</span>
+          <span class="day-task"><strong>Buffer:</strong> Fix regressions, edge cases, last-minute polish. Do not add new features.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── NOT BUILDING ──────────────── -->
+  <section id="not-building">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>Not Building in MVP</h2>
+    </div>
+
+    <p>Scope control is how the demo ships on time. These are explicitly deferred. Do not add them. If a client asks, say "Phase 2."</p>
+
+    <ul class="notbuilding">
+      <li>Real carrier API integrations</li>
+      <li>Parallel / predictive dialer</li>
+      <li>Commission reconciliation from carrier SFTPs</li>
+      <li>E-signature / DocuSign</li>
+      <li>Certificate of Insurance generation</li>
+      <li>Calendar integration (Google/Outlook)</li>
+      <li>SOC2 Type II compliance</li>
+      <li>Multi-channel inbox</li>
+      <li>Full campaign management UI</li>
+      <li>Mobile app</li>
+      <li>SSO (Microsoft Entra / Google Workspace)</li>
+      <li>Carrier SFTP feeds</li>
+    </ul>
+  </section>
+
+  <!-- ──────────────── COMPLIANCE ──────────────── -->
+  <section id="compliance">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2>Compliance Requirements</h2>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-icon">⚠</div>
+      <div class="callout-body">
+        <strong>Do not ship any dialer feature without legal review.</strong> TCPA violations carry $500–$1,500 per call in statutory damages. At scale this is existential.
+      </div>
+    </div>
+
+    <div class="pill-row">
+      <span class="pill red">TCPA</span>
+      <span class="pill red">TSR</span>
+      <span class="pill amber">HIPAA-adjacent (GLBA/NAIC)</span>
+      <span class="pill amber">E&amp;O</span>
+      <span class="pill blue">Carrier contracts</span>
+      <span class="pill blue">ACORD</span>
+      <span class="pill purple">State insurance regs</span>
+    </div>
+
+    <div class="card-grid" style="margin-top:16px;">
+      <div class="card danger">
+        <div class="card-title">TCPA</div>
+        <div class="card-body">Provable per-number consent required. DNC scrubbing (federal + state) before any dial. Recording disclosures per state. Two-party consent states: CA, FL, IL, MD, MA, MT, NH, PA, WA.</div>
+      </div>
+      <div class="card warning">
+        <div class="card-title">Medical Data (HIPAA-adjacent)</div>
+        <div class="card-body">We capture A1C, diagnoses, prescriptions. Not technically HIPAA (insurance = GLBA/NAIC), but treat as PHI. Column-level encryption, audit logs, retention policies required.</div>
+      </div>
+      <div class="card warning">
+        <div class="card-title">E&amp;O — Carrier Ranking</div>
+        <div class="card-body">If ranking is wrong and agent relies on it, the brokerage has Errors &amp; Omissions exposure. All ranking logic must be deterministic and auditable. No RAG, no LLM in the ranking path.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">State Insurance Regulations</div>
+        <div class="card-body">AI "recommending" a carrier must be framed as <em>agent-selected from AI-ranked options</em>. The licensed agent is the actor. The AI is a tool. This distinction must be in the UI copy.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Carrier Contracts</div>
+        <div class="card-body">Redistribution of carrier feed data may be restricted by contract. Get legal signoff before connecting carrier SFTPs in Phase 2.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">ACORD Forms</div>
+        <div class="card-body">ACORD forms are licensed IP. We cannot generate Certificates of Insurance without rights. Deferred entirely.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── RAG ──────────────── -->
+  <section id="rag">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2>RAG / Knowledge Architecture</h2>
+    </div>
+
+    <div class="card-grid three">
+      <div class="card danger">
+        <div class="card-title">Real-time Ranking — NO RAG</div>
+        <div class="card-body">Deterministic TypeScript function querying structured Postgres tables. Sub-100ms. Auditable. No vector search in this path, ever.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 2 — Sales RAG</div>
+        <div class="card-body">pgvector in Supabase for: sales scripts library, objection handling, historical call transcript search ("similar diabetic cases that closed").</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 3 — Carrier Guide Ingestion</div>
+        <div class="card-body">RAG pipeline over 300-page carrier underwriting PDFs → human-reviewed extraction → structured rules tables. RAG feeds the DB; never serves agents directly.</div>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:8px;">
+      <div class="callout-icon">→</div>
+      <div class="callout-body">
+        <strong>No Neo4j.</strong> Postgres with foreign keys is the knowledge graph for this product. pgvector handles semantic search when we need it.
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── DECISIONS ──────────────── -->
+  <section id="decisions">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2>Key Decisions Already Made</h2>
+    </div>
+
+    <p>These decisions are finalized. Do not re-litigate them during the MVP build. Raise concerns in a retrospective after the demo.</p>
+
+    <ul class="decision-list">
+      <li>
+        <div class="decision-num">1</div>
+        <div class="decision-body">
+          <div class="decision-title">Deterministic rules for underwriting — NOT RAG</div>
+          <div class="decision-why">Auditable, fast (&lt;100ms), E&amp;O-defensible. RAG hallucination in a ranking context creates legal liability.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">2</div>
+        <div class="decision-body">
+          <div class="decision-title">Supabase over custom backend</div>
+          <div class="decision-why">RLS, Realtime, pgvector, Edge Functions, Auth all in one platform. Fewer moving parts for a 3-week build.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">3</div>
+        <div class="decision-body">
+          <div class="decision-title">Browser softphone (Twilio Voice SDK) over hardware integration</div>
+          <div class="decision-why">Simpler architecture, demo-able without physical setup, works in any browser. Hardware integration is Phase 2+.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">4</div>
+        <div class="decision-body">
+          <div class="decision-title">Claude tool-use for extraction — not a fine-tuned model</div>
+          <div class="decision-why">Flexibility to iterate on the schema without retraining. No training pipeline to maintain. Tool-use is production-grade.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">5</div>
+        <div class="decision-body">
+          <div class="decision-title">Dark theme, insurance-professional aesthetic</div>
+          <div class="decision-why">The buyer is an insurance brokerage, not a startup. Design signals trust and authority, not playfulness.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">6</div>
+        <div class="decision-body">
+          <div class="decision-title">Internal tool first, product later</div>
+          <div class="decision-why">Dramatically reduces compliance surface during MVP. No external user registration, no multi-tenant billing, no consumer data exposure.</div>
+        </div>
+      </li>
+      <li>
+        <div class="decision-num">7</div>
+        <div class="decision-body">
+          <div class="decision-title">Single-line dialer first</div>
+          <div class="decision-why">Parallel dialing requires robust TCPA consent architecture and DNC infrastructure. Deferred to prevent legal exposure on day one.</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ──────────────── REFERENCES ──────────────── -->
+  <section id="references">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <h2>Reference Products</h2>
+    </div>
+
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-name">LeadChampPro</div>
+        <div class="ref-desc">GHL skin for insurance. This is what the client uses today. We have login access to study their workflows.</div>
+        <span class="ref-relation study">Study + Replace</span>
+      </div>
+      <div class="ref-card">
+        <div class="ref-name">GoHighLevel</div>
+        <div class="ref-desc">White-label CRM. The pipeline/workflow/SMS engine is the reference implementation for our pipeline UX.</div>
+        <span class="ref-relation ref">Design Reference</span>
+      </div>
+      <div class="ref-card">
+        <div class="ref-name">Cluely</div>
+        <div class="ref-desc">Horizontal AI sales coaching. Proves market demand. We beat it on vertical integration — they're generic, we're surgical.</div>
+        <span class="ref-relation beat">Beat It</span>
+      </div>
+      <div class="ref-card">
+        <div class="ref-name">Applied Epic / Vertafore AMS360</div>
+        <div class="ref-desc">Enterprise AMS platforms. We are NOT competing here. We complement or replace for smaller brokerages.</div>
+        <span class="ref-relation compl">Complement</span>
+      </div>
+      <div class="ref-card">
+        <div class="ref-name">NowCerts / EZLynx / QQCatalyst</div>
+        <div class="ref-desc">Mid-market AMS. Closest feature competitors, but none have an AI dialer coaching layer.</div>
+        <span class="ref-relation beat">We Have the Moat</span>
+      </div>
+      <div class="ref-card">
+        <div class="ref-name">Kixie</div>
+        <div class="ref-desc">Power dialer with parallel dialing. Reference implementation for Phase 2 parallel dialer UX and TCPA architecture.</div>
+        <span class="ref-relation ref">Phase 2 Reference</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── TEAM ──────────────── -->
+  <section id="team">
+    <div class="section-header">
+      <span class="section-num">16</span>
+      <h2>Team &amp; Roles</h2>
+    </div>
+
+    <div class="team-card">
+      <div class="team-avatar av-zazu">Z</div>
+      <div class="team-info">
+        <div class="team-name">Zazu — Technical Co-founder / AI + Product</div>
+        <div class="team-role">Agentic Engineering Lead</div>
+        <div class="team-focus">Dialer architecture, transcription pipeline, Claude orchestration, product vision, engineering direction</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar av-be">BE</div>
+      <div class="team-info">
+        <div class="team-name">Senior Backend Engineer — TBD</div>
+        <div class="team-role">Hiring / Onboarding</div>
+        <div class="team-focus">Carrier integrations, multi-AMS sync, SOC2 architecture (Phase 2)</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar av-be">FE</div>
+      <div class="team-info">
+        <div class="team-name">Senior Frontend Engineer — TBD</div>
+        <div class="team-role">Hiring / Onboarding</div>
+        <div class="team-focus">GHL-level UI polish, real-time dashboards, dialer cockpit UI, Framer Motion animations</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="team-avatar av-be">CA</div>
+      <div class="team-info">
+        <div class="team-name">Compliance Advisor — Fractional</div>
+        <div class="team-role">~$3–5K/mo engagement</div>
+        <div class="team-focus">TCPA, state insurance regulations, PHI handling, DNC infrastructure, E&amp;O risk review</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────── SETUP ──────────────── -->
+  <section id="setup">
+    <div class="section-header">
+      <span class="section-num">17</span>
+      <h2>Local Setup</h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">bash</span>
+        <span class="code-filename">Terminal</span>
+      </div>
+      <pre><code><span class="cm"># Clone and install</span>
+<span class="fn">git</span> clone [repo-url]
+<span class="kw">cd</span> nexus-os
+<span class="fn">npm</span> install
+
+<span class="cm"># Start Supabase locally</span>
+<span class="fn">npx</span> supabase start
+<span class="fn">npx</span> supabase db push
+
+<span class="cm"># Dev server</span>
+<span class="fn">npm</span> run dev</code></pre>
+    </div>
+
+    <h3>Required Environment Variables</h3>
+    <div class="env-grid">
+      <div class="env-item"><span class="env-key">NEXT_PUBLIC_SUPABASE_URL</span><span class="env-eq">=</span><span class="env-val">your-project-url</span></div>
+      <div class="env-item"><span class="env-key">NEXT_PUBLIC_SUPABASE_ANON_KEY</span><span class="env-eq">=</span><span class="env-val">anon-key</span></div>
+      <div class="env-item"><span class="env-key">SUPABASE_SERVICE_ROLE_KEY</span><span class="env-eq">=</span><span class="env-val">service-role-key</span></div>
+      <div class="env-item"><span class="env-key">TWILIO_ACCOUNT_SID</span><span class="env-eq">=</span><span class="env-val">ACxxxxxxxx</span></div>
+      <div class="env-item"><span class="env-key">TWILIO_AUTH_TOKEN</span><span class="env-eq">=</span><span class="env-val">auth-token</span></div>
+      <div class="env-item"><span class="env-key">TWILIO_PHONE_NUMBER</span><span class="env-eq">=</span><span class="env-val">+1xxxxxxxxxx</span></div>
+      <div class="env-item"><span class="env-key">DEEPGRAM_API_KEY</span><span class="env-eq">=</span><span class="env-val">dg-key</span></div>
+      <div class="env-item"><span class="env-key">ANTHROPIC_API_KEY</span><span class="env-eq">=</span><span class="env-val">sk-ant-key</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────────── FILE STRUCTURE ──────────────── -->
+  <section id="structure">
+    <div class="section-header">
+      <span class="section-num">18</span>
+      <h2>File Structure</h2>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">tree</span>
+        <span class="code-filename">nexus-os/</span>
+      </div>
+      <pre><code class="file-tree"><span class="dir">nexus-os/</span>
+<span class="pl">├─</span> <span class="dir">app/</span>                          <span class="note"># Next.js app router</span>
+<span class="pl">│  ├─</span> <span class="dir">(auth)/</span>                    <span class="note"># Login / signup pages</span>
+<span class="pl">│  ├─</span> <span class="dir">(dashboard)/</span>               <span class="note"># Main app shell (requires auth)</span>
+<span class="pl">│  │  ├─</span> <span class="dir">pipeline/</span>               <span class="note"># Drag-drop pipeline board</span>
+<span class="pl">│  │  ├─</span> <span class="dir">cockpit/</span>                <span class="note"># AI call cockpit (the moat)</span>
+<span class="pl">│  │  ├─</span> <span class="dir">contacts/</span>               <span class="note"># Contact list + detail views</span>
+<span class="pl">│  │  ├─</span> <span class="dir">dashboard/</span>              <span class="note"># KPIs, commissions, leaderboard</span>
+<span class="pl">│  │  ├─</span> <span class="dir">campaigns/</span>              <span class="note"># Lead list management (stub)</span>
+<span class="pl">│  │  └─</span> <span class="dir">settings/</span>               <span class="note"># Agent / agency settings</span>
+<span class="pl">│  └─</span> <span class="dir">api/</span>                        <span class="note"># API routes</span>
+<span class="pl">│     ├─</span> <span class="dir">twilio/</span>                  <span class="note"># Voice webhooks (TwiML, status)</span>
+<span class="pl">│     ├─</span> <span class="dir">deepgram/</span>                <span class="note"># STT proxy (auth'd WebSocket)</span>
+<span class="pl">│     ├─</span> <span class="dir">ai/</span>                      <span class="note"># Claude extraction endpoint</span>
+<span class="pl">│     └─</span> <span class="dir">carriers/</span>                <span class="note"># Ranking + quoting endpoints</span>
+<span class="pl">├─</span> <span class="dir">components/</span>
+<span class="pl">│  ├─</span> <span class="dir">pipeline/</span>                   <span class="note"># Board, cards, stage columns, drag</span>
+<span class="pl">│  ├─</span> <span class="dir">cockpit/</span>                    <span class="note"># Transcript, facts panel, coaching, ranking</span>
+<span class="pl">│  ├─</span> <span class="dir">dashboard/</span>                  <span class="note"># Charts, KPI cards, leaderboard</span>
+<span class="pl">│  └─</span> <span class="dir">ui/</span>                         <span class="note"># shadcn base components</span>
+<span class="pl">├─</span> <span class="dir">lib/</span>
+<span class="pl">│  ├─</span> <span class="dir">carriers/</span>                   <span class="note"># Rules engine, ranking fn, quote generator</span>
+<span class="pl">│  ├─</span> <span class="dir">twilio/</span>                     <span class="note"># Voice SDK setup, token generation</span>
+<span class="pl">│  ├─</span> <span class="dir">deepgram/</span>                   <span class="note"># Streaming STT client, utterance buffer</span>
+<span class="pl">│  ├─</span> <span class="dir">ai/</span>                         <span class="note"># Claude tool-use client, extraction loop</span>
+<span class="pl">│  ├─</span> <span class="dir">supabase/</span>                   <span class="note"># Browser + server clients, RLS helpers</span>
+<span class="pl">│  └─</span> <span class="dir">utils/</span>                      <span class="note"># Shared utilities</span>
+<span class="pl">├─</span> <span class="dir">supabase/</span>
+<span class="pl">│  └─</span> <span class="dir">migrations/</span>                 <span class="note"># SQL migration files (numbered)</span>
+<span class="pl">├─</span> <span class="dir">data/</span>
+<span class="pl">│  └─</span> <span class="dir">carriers/</span>                   <span class="note"># JSON carrier knowledge base (5 files)</span>
+<span class="pl">├─</span> <span class="file">package.json</span>
+<span class="pl">└─</span> <span class="file">.env.local</span>                     <span class="note"># Never commit this</span></code></pre>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">→</div>
+      <div class="callout-body">
+        <strong>File size rules:</strong> Keep all files under 400 lines. 800 lines is the hard ceiling. If a file approaches 400 lines, split it by feature subdomain before continuing.
+      </div>
+    </div>
+  </section>
+
+</div><!-- /content-wrap -->
+</div><!-- /main -->
+
+<script>
+  // Sidebar active state on scroll
+  const sections = document.querySelectorAll('section[id], div[id="hero"]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
